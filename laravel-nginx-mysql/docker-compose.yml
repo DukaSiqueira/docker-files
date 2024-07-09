@@ -1,0 +1,69 @@
+version: '3'
+
+services:
+
+    #PHP Service
+    api:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        container_name: api
+        restart: unless-stopped
+        tty: true
+        environment:
+            SERVICE_NAME: api
+            SERVICE_TAGS: dev
+        working_dir: /var/www
+        volumes:
+            - ./:/var/www
+            - ./php/local.ini:/usr/local/etc/php/conf.d/local.ini
+        networks:
+            - app-network
+
+    #Nginx Service
+    webserver:
+        build:
+            context: .
+            dockerfile: ./Dockerfile.nginx
+            args:
+                NGINX_FILE: api.conf
+        container_name: apiserver
+        restart: unless-stopped
+        tty: true
+        ports:
+            - "80:80"
+            - "443:443"
+        volumes:
+            - ./nginx/conf.d/:/etc/nginx/conf.d/
+        networks:
+            - app-network
+
+    #MySQL Service
+    db:
+        image: mysql
+        container_name: database
+        restart: unless-stopped
+        tty: true
+        environment:
+            SERVICE_NAME: mysql
+            SERIVE_TAGE: dev
+            MYSQL_DB: pla-back
+            MYSQL_USER: DukaSiqueira
+            MYSQL_PASSWORD: Siqueira_123
+            MYSQL_ROOT_PASSWORD: Siqueira_123
+        ports:
+            - "3306:3306"
+        volumes:
+            - dbdata:/var/lib/postgresql/data
+        networks:
+            - app-network
+
+#Docker Networks
+networks:
+    app-network:
+        driver: bridge
+
+#Docker Volumes
+volumes:
+    dbdata:
+        driver: local
